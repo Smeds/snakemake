@@ -6,6 +6,8 @@ from snakemake.sourcecache import (
     GenericSourceFile,
     GithubFile,
     GitlabFile,
+    LocalGitFile,
+    LocalSourceFile,
     infer_source_file,
 )
 
@@ -236,3 +238,35 @@ def test_hosted_repo_cache_key_distinguishes_provider_and_host():
     finally:
         GithubFile._hosted_repos = old_cache
         GitlabFile._hosted_repos = old_cache
+
+
+def test_local_git_file_join_accepts_source_file():
+    # Job._path_to_source_file() runs the script/notebook path through
+    # infer_source_file() before handing it to Rule.basedir.join(), so join()
+    # has to accept a SourceFile just like the SourceFile base class does.
+    basedir = LocalGitFile("/repo", path="workflow/rules", tag="branch")
+
+    joined = basedir.join(infer_source_file("../scripts/script.py"))
+
+    assert isinstance(joined, LocalGitFile)
+    assert joined.path == "workflow/scripts/script.py"
+    assert joined.repo_path == "/repo"
+    assert joined.tag == "branch"
+
+
+def test_local_git_file_join_accepts_str():
+    basedir = LocalGitFile("/repo", path="workflow/rules", tag="branch")
+
+    joined = basedir.join("../scripts/script.py")
+
+    assert isinstance(joined, LocalGitFile)
+    assert joined.path == "workflow/scripts/script.py"
+
+
+def test_hosting_provider_file_join_accepts_source_file():
+    basedir = GithubFile(repo="owner/repo", path="workflow/rules", tag="tag")
+
+    joined = basedir.join(LocalSourceFile("../scripts/script.py"))
+
+    assert isinstance(joined, GithubFile)
+    assert joined.path == "workflow/scripts/script.py"

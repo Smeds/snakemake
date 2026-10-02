@@ -97,7 +97,7 @@ jobs:
 
       - name: Setup MinIO for AWS S3 testing (os='Linux', for AWS S3 testing)
         if: runner.os == 'Linux'
-        uses: comfuture/minio-action@v1
+        uses: comfuture/silo-action@v2
         with:
           access_key: minio
           secret_key: minio123
@@ -123,7 +123,7 @@ jobs:
 
           cd tests/test_report
           pixi run -e ${{ matrix.env }} snakemake \
-            --use-conda \
+            --sdm conda \
             --cores 1 \
             --report report.zip
 
